@@ -175,3 +175,8 @@ export const getAssignedJDsByRMG = asyncHandler(async (req, res, next) => {
     .populate('createdBy', 'name email');
   res.status(200).json({ success: true, count: jds.length, data: jds });
 });
+
+export const getAssignedOffersByRMG = asyncHandler(async (req, res, next) => {
+  const offers = await Offer.find({ assignedTo: req.user._id, status: 'JD created' });
+  res.status(200).json({ success: true, count: offers.length, data: offers });
+});
