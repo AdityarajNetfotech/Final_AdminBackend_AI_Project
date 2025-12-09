@@ -30,6 +30,7 @@ export const createJD = asyncHandler(async (req, res, next) => {
     benefits,
     additionalNotes,
     generatedByAI: false,
+    isJDCreated:true,
     publicToken: generateUniqueToken(16),
   });
  

@@ -53,7 +53,7 @@ export const createOffer = asyncHandler(async(req, res, next) => {
         currency,
         attachments,
         status:"JD pending",
-        isJDCreated:true,
+        
     });
 
     const html = offerAssignedTemplate(
