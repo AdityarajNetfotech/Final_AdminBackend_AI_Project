@@ -205,13 +205,13 @@ export const getjobrecommendationsForCandidate = asyncHandler(async (req, res, n
     const currentTitle = candidate.currentTitle || "";
 
     // Build dynamic OR conditions safely
-    const conditions = [];
+    const conditions = []; 
 
     if (skills.length > 0) {
       conditions.push({ skills: { $in: skills } });
     }
 
-    if (preferredLocations.length > 0) {
+    if (preferredLocations.length > 0) { 
       conditions.push({ location: { $in: preferredLocations } });
     }
 
