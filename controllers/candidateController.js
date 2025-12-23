@@ -1,4 +1,4 @@
-import Candidate from "../models/candidate.js";
+import Candidate from "../models/Candidate.js";
 import sendEmail from '../utils/sendEmail.js';
 import { bulkJDInviteTemplate } from '../utils/emailTemplates/bulkJDInviteTemplate.js';
 /**
@@ -140,10 +140,11 @@ export const sendBulkJDInvite = asyncHandler(async (req, res, next) => {
       jd.companyName || 'Our Company',
       applyUrl
     );
+    //jd.jobSummary || jd.title ||
     try {
       await sendEmail({
         to: candidate.email,
-        subject: `New Opening: ${jd.jobSummary || jd.title || jd.jobTitle}`,
+        subject: `New Opening: ${ jd.jobTitle}`,
         html
       });
       sentCount++;
