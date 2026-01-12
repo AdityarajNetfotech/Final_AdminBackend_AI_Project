@@ -49,16 +49,13 @@ const offerSchema = new mongoose.Schema({
     type:Number,
     required:true
    },
-   location:{
+   workMode:{
     type:String,
     required:true,
    },
-   city:{
-    type:String,
+   location:{
+    type:[String],
    },
-   state:String,
-   country:String,
-
    employmentType:{
     type:String,
     enum:["Full-Time","Part-Time", "Contract", "Internship", "Remote"],
