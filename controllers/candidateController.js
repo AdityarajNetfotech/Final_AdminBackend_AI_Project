@@ -24,7 +24,7 @@ export const updateCandidateProfile = asyncHandler(async (req, res, next) => {
 });
 import Candidate from "../models/candidate.js";
 import sendEmail from '../utils/sendEmail.js';
-import { bulkJDInviteTemplate } from '../utils/emailTemplates/bulkJDInviteTemplate.js';
+import { bulkJDTemplate } from '../utils/emailTemplates/bulkJDTemplate.js';
 /**
  * Send bulk JD invite emails to selected candidates for a new opening
  * Params: jdId (JobDescription id)
@@ -189,7 +189,7 @@ export const sendBulkJDInvite = asyncHandler(async (req, res, next) => {
   // Send emails
   let sentCount = 0;
   for (const candidate of candidates) {
-    const html = bulkJDInviteTemplate(
+    const html = bulkJDTemplate(
       candidate.name,
       jd.jobSummary || jd.title || jd.jobTitle || 'Job Opening',
       jd.companyName || 'Our Company',
