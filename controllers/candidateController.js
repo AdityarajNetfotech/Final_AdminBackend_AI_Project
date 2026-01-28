@@ -185,7 +185,7 @@ export const sendBulkJDInvite = asyncHandler(async (req, res, next) => {
   }
 
   // Build apply URL (customize as needed)
-  const applyUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173/candidateRegister'}`;
+  const applyUrl = `${process.env.FRONTEND_URL || 'http://103.192.198.240/CandidateLogin'}`;
 
   // Send emails
   let sentCount = 0;
@@ -237,7 +237,7 @@ export const sendInviteToShortlisted = asyncHandler(async (req, res, next) => {
   }
 
   // Build apply URL (customize as needed)
-  const applyUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173/candidateLogin'}`;
+  const applyUrl = `${process.env.FRONTEND_URL || 'http://103.192.198.240/CandidateLogin'}`;
 
   // Get jobTitle with proper fallback
   const jobTitle = jd.jobTitle || jd.title || jd.jobSummary || 'Job Opening';
