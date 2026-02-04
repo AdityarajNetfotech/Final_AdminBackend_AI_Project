@@ -202,3 +202,23 @@ export const deleteJD = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(err.message || 'Failed to delete JD', 500));
   }
 });
+
+export const updateHRProfile = asyncHandler(async (req, res, next) => {
+  const { phone } = req.body;
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    { phone },
+    { new: true }
+  ).select('-password');
+
+  if (!user) {
+    return next(new ErrorResponse('User not found', 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Profile updated',
+    data: user
+  });
+});
