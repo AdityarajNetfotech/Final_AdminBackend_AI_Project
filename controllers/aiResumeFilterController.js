@@ -20,6 +20,31 @@ export const filterResumes = asyncHandler(async (req, res) => {
   
   const { candidateIds } = req.body;
   
+    // Emit and persist notifications for filtered/unfiltered candidates
+    const io = req.app?.get?.('io');
+    const Notification = (await import('../models/notification.js')).default;
+    // Notify filtered candidates
+    for (const filtered of aiResult.filtered) {
+      const candidateId = cleanId(filtered.id, jd);
+      const candidateObj = jd.appliedCandidates.find(c => c.candidate._id.toString() === candidateId);
+      if (candidateObj) {
+        const message = `You have been filtered for JD: ${jd.jobSummary || jd.title || jd.jobTitle}`;
+        const link = `/jobs/${jd._id}`;
+        if (io) io.to(candidateId).emit('notification', { message, link, createdAt: new Date() });
+        await Notification.create({ recipient: candidateId, message, link });
+      }
+    }
+    // Notify unfiltered candidates
+    for (const unfiltered of aiResult.unfiltered) {
+      const candidateId = cleanId(unfiltered.id, jd);
+      const candidateObj = jd.appliedCandidates.find(c => c.candidate._id.toString() === candidateId);
+      if (candidateObj) {
+        const message = `You have been unfiltered for JD: ${jd.jobSummary || jd.title || jd.jobTitle}`;
+        const link = `/jobs/${jd._id}`;
+        if (io) io.to(candidateId).emit('notification', { message, link, createdAt: new Date() });
+        await Notification.create({ recipient: candidateId, message, link });
+      }
+    }
   const jd = await JD.findById(jdId).populate("appliedCandidates.candidate");
   if (!jd) return res.status(404).json({ success: false, message: "JD not found" });
 

@@ -1,3 +1,36 @@
+// Scheduled job: Notify HR when offer due date is near (within 3 days)
+export const notifyHrDueDateApproaching = asyncHandler(async (req, res, next) => {
+  // Find offers with dueDate within next 3 days and status not Closed
+  const now = new Date();
+  const soon = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const offers = await Offer.find({
+    dueDate: { $gte: now, $lte: soon },
+    status: { $ne: 'Closed' },
+    assignedTo: { $ne: null }
+  }).populate('assignedTo', 'name email');
+
+  const Notification = (await import('../models/notification.js')).default;
+  const io = req.app?.get?.('io');
+  let notified = 0;
+  for (const offer of offers) {
+    const hrId = offer.assignedTo?._id || offer.assignedTo;
+    const message = `Offer due date approaching: ${offer.jobTitle} (Due: ${offer.dueDate.toLocaleDateString()})`;
+    const link = `/offers/${offer._id}`;
+    // Check if notification already exists for this offer and HR in last 3 days
+    const recent = await Notification.findOne({
+      recipient: hrId,
+      message,
+      link,
+      createdAt: { $gte: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000) }
+    });
+    if (!recent) {
+      await Notification.create({ recipient: hrId, message, link });
+      if (io) io.to(hrId.toString()).emit('notification', { message, link, createdAt: new Date() });
+      notified++;
+    }
+  }
+  res.status(200).json({ success: true, notified, count: offers.length });
+});
 import Offer from "../models/Offer.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ErrorResponse from "../utils/errorResponse.js";
@@ -68,16 +101,24 @@ export const createOffer = asyncHandler(async(req, res, next) => {
         html
     });
 
-    // Store notification in DB and emit to assigned HR (recruiter)
+    // Store notification in DB and emit to assigned HR (recruiter) and RMG (creator)
     const Notification = (await import('../models/notification.js')).default;
-    const notification = await Notification.create({
+    // Notify assigned recruiter
+    const recruiterNotification = await Notification.create({
       recipient: hrUser._id,
       message: `New offer assigned: ${offer.jobTitle}`,
       link: `/offers/${offer._id}`
     });
+    // Notify RMG (creator)
+    const rmgNotification = await Notification.create({
+      recipient: req.user._id,
+      message: `Offer created and assigned to ${hrUser.name}: ${offer.jobTitle}`,
+      link: `/offers/${offer._id}`
+    });
     const io = req.app.get('io');
     if (io) {
-      io.to(hrUser._id.toString()).emit('notification', notification);
+      io.to(hrUser._id.toString()).emit('notification', recruiterNotification);
+      io.to(req.user._id.toString()).emit('notification', rmgNotification);
     }
 
     res.status(201).json({

@@ -36,8 +36,13 @@ app.use(limiter);
 // Routes
 app.use('/api', routes);
 
+
 // Assessment routes
 app.use('/api/assessment', assessmentRoutes);
+
+// Notification routes
+import notificationRoutes from './routes/notificationRoutes.js';
+app.use('/api/notifications', notificationRoutes);
 
 // 404 handler
 app.use((req, res, next) => {

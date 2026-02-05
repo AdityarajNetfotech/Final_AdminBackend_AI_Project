@@ -37,7 +37,19 @@ export const createJD = asyncHandler(async (req, res, next) => {
   // Update offer status
   offer.status = "JD created";
   await offer.save();
- 
+
+  // Notify RMG (offer creator)
+  const Notification = (await import('../models/notification.js')).default;
+  const rmgNotification = await Notification.create({
+    recipient: offer.createdBy,
+    message: `JD created for your offer: ${offer.jobTitle}`,
+    link: `/offers/${offer._id}`
+  });
+  const io = req.app.get('io');
+  if (io) {
+    io.to(offer.createdBy.toString()).emit('notification', rmgNotification);
+  }
+
   res.status(201).json({
     success: true,
     message: "JD created successfully.",
@@ -120,6 +132,18 @@ export const createJDWithAI = asyncHandler(async (req, res, next) => {
   offer.status = "JD created";
   offer.isJDCreated = true; 
   await offer.save();
+
+  // Notify RMG (offer creator)
+  const Notification = (await import('../models/notification.js')).default;
+  const rmgNotification = await Notification.create({
+    recipient: offer.createdBy,
+    message: `JD created for your offer: ${offer.jobTitle}`,
+    link: `/offers/${offer._id}`
+  });
+  const io = req.app.get('io');
+  if (io) {
+    io.to(offer.createdBy.toString()).emit('notification', rmgNotification);
+  }
 
   res.status(201).json({
     success: true,
