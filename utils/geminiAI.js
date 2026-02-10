@@ -252,16 +252,10 @@ export async function filterResumesWithAI(jd, candidates) {
     const unfiltered = [];
 
     for (const candidate of candidates) {
-
       // Step 1: Extract resume text
       const extraction = await extractResumeText(candidate.resume);
 
       if (!extraction.isResume) {
-        // unfiltered.push({
-        //   id: candidate.id,
-        //   score: 0,
-        //   explanation: "The uploaded document is not a resume. " + extraction.content
-        // });
         unfiltered.push({
           id: candidate.id,
           score: 0,
@@ -273,8 +267,38 @@ export async function filterResumesWithAI(jd, candidates) {
       // Step 2: Evaluate based on JD
       const evaluation = await evaluateResume(jd, candidate, extraction.content);
 
-      // Score threshold - you can adjust
-      if (evaluation.score >= 60) {
+      // Step 3: Filter by AI score primarily, then skills/experience as secondary
+      // If score is high, always filter
+      if (evaluation.score >= 35) {
+        filtered.push(evaluation);
+        continue;
+      }
+
+      // If score is low, optionally use skills/experience as fallback (optional, can be removed)
+      let candidateSkills = candidate.skills || [];
+      let jdSkills = jd.requirements || [];
+      let candidateExperience = candidate.experience;
+      let jdExperience = jd.experience;
+
+      if (typeof candidateSkills === 'string') {
+        candidateSkills = candidateSkills.split(',').map(s => s.trim()).filter(Boolean);
+      }
+      if (typeof jdSkills === 'string') {
+        jdSkills = jdSkills.split(',').map(s => s.trim()).filter(Boolean);
+      }
+      candidateExperience = Number(candidateExperience);
+      jdExperience = Number(jdExperience);
+      if (isNaN(candidateExperience)) candidateExperience = 0;
+      if (isNaN(jdExperience)) jdExperience = 0;
+      let hasSkillMatch = true;
+      if (jdSkills.length > 0) {
+        hasSkillMatch = jdSkills.some(skill => candidateSkills.includes(skill));
+      }
+      let hasExperienceMatch = true;
+      if (jdExperience > 0) {
+        hasExperienceMatch = candidateExperience >= jdExperience;
+      }
+      if (hasSkillMatch && hasExperienceMatch) {
         filtered.push(evaluation);
       } else {
         unfiltered.push(evaluation);

@@ -24,8 +24,8 @@ export const registerRMG = asyncHandler(async (req, res, next) => {
   if (existing) return next(new ErrorResponse('Email already registered', 400));
 
   // ensure only one RMG per company
-  const existingRMG = await User.findOne({ role: 'RMG', company });
-  if (existingRMG) return next(new ErrorResponse('An RMG already exists for this company', 400));
+  // const existingRMG = await User.findOne({ role: 'RMG', company });
+  // if (existingRMG) return next(new ErrorResponse('An RMG already exists for this company', 400));
 
   // generate secure password
   const password = generatePassword();
@@ -177,7 +177,7 @@ export const registerHR = asyncHandler(async (req, res, next) => {
 }); 
 
 /* Helper to build HTML credential email */
-const buildCredentialEmail = (name, number, email, password, role) => {
+const marginbuildCredentialEmail = (name, number, email, password, role) => {
   const loginUrl = 'https://recruterai.netfotech.in/login';
   const companyLine = `<p style="margin:0">Role: <strong>${role}</strong></p>`;
 

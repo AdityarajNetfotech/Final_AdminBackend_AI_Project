@@ -102,16 +102,20 @@ export const applyJob = asyncHandler(async (req, res, next) => {
   candidate.resume = resumeUrl;
   await candidate.save();
 
-  const jd = await JD.findById(jdId);
+  // Fetch JD and populate offerId to get jobTitle
+  const jd = await JD.findById(jdId).populate({ path: 'offerId', select: 'jobTitle' });
   if (!jd) return next(new errorResponse("JD not found", 404));
 
-      // Persist notification for recruiter (JD creator)
-      const Notification = (await import('../models/notification.js')).default;
-      await Notification.create({
-        recipient: jd.createdBy,
-        message: `New candidate applied: ${candidate.name} for ${jd.jobSummary || jd.title || jd.jobTitle}`,
-        link: `/jobs/${jd._id}`,
-      });
+  // Get job title from Offer if available, else fallback to JD fields
+  const jobTitle = jd.offerId?.jobTitle || jd.jobTitle || jd.title || jd.jobSummary || 'Job Opening';
+
+  // Persist notification for recruiter (JD creator)
+  const Notification = (await import('../models/notification.js')).default;
+  await Notification.create({
+    recipient: jd.createdBy,
+    message: `New candidate applied: ${candidate.name} for ${jobTitle}`,
+    link: `/jobs/${jd._id}`,
+  });
   if (jd.appliedCandidates.some(c => c.candidate.toString() === candidate._id.toString())) {
     return next(new errorResponse("Already applied to this job", 400));
   }
@@ -133,13 +137,13 @@ export const applyJob = asyncHandler(async (req, res, next) => {
   if (io) {
     // Notify candidate
     io.to(candidate._id.toString()).emit('notification', {
-      message: `You have successfully applied to: ${jd.jobSummary || jd.title || jd.jobTitle}`,
+      message: `You have successfully applied to: ${jobTitle}`,
       link: `/jobs/${jd._id}`,
       createdAt: new Date(),
     });
     // Notify recruiter (JD creator)
     io.to(jd.createdBy.toString()).emit('notification', {
-      message: `New candidate applied: ${candidate.name} for ${jd.jobSummary || jd.title || jd.jobTitle}`,
+      message: `New candidate applied: ${candidate.name} for ${jobTitle}`,
       link: `/jobs/${jd._id}`,
       createdAt: new Date(),
     });
