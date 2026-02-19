@@ -430,6 +430,8 @@ export const sendInviteToShortlisted = asyncHandler(async (req, res, next) => {
 
   // Send emails
   let sentCount = 0;
+  const sentCandidateIds = [];
+  const failedCandidateIds = [];
   for (const candidate of candidates) {
     const html = shortlistedCandidate(
       candidate.name,
@@ -448,6 +450,7 @@ export const sendInviteToShortlisted = asyncHandler(async (req, res, next) => {
         html
       });
       sentCount++;
+      sentCandidateIds.push(candidate._id.toString());
       // mark appliedCandidate entry as link_sent, set invitedAt, mailStatus, and mailSentAt
       const idx = jd.appliedCandidates.findIndex(ac => ac.candidate && ac.candidate.toString() === candidate._id.toString());
       if (idx !== -1) {
@@ -462,6 +465,7 @@ export const sendInviteToShortlisted = asyncHandler(async (req, res, next) => {
       if (idx !== -1) {
         jd.appliedCandidates[idx].mailStatus = 'failed';
       }
+      failedCandidateIds.push(candidate._id.toString());
     }
   }
 
@@ -476,6 +480,9 @@ export const sendInviteToShortlisted = asyncHandler(async (req, res, next) => {
     sentCount,
     alreadyInvitedCount,
     completedTestCount
+    , attempted: selectedCandidateIds.map(id => id.toString()),
+    sentCandidateIds,
+    failedCandidateIds
   });
 });
 
