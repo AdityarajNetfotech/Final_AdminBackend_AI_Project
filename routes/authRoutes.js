@@ -1,10 +1,12 @@
 // routes/authRoutes.js
 import express from 'express';
-import { register, login, getCandidateMe, getUserMe,syncCompanyFromExternalDB,getAllCompanies } from '../controllers/authController.js';
+import { register, login, getCandidateMe, getUserMe,syncCompanyFromExternalDB,getAllCompanies , toggleUserStatus  } from '../controllers/authController.js';
 
 import { protectCandidate } from '../middlewares/authCandidate.js';
 import { protect } from '../middlewares/auth.js';
 import { authorize } from '../middlewares/roles.js';
+import { protects } from '../middlewares/protect.js';
+import { authorizes } from '../middlewares/authorize.js';
 
 const router = express.Router();
 
@@ -20,5 +22,6 @@ router.get(
   "/all-companies",
   getAllCompanies
 );
+router.put('/toggle-user/:id', protects, authorizes('Admin'), toggleUserStatus);
 
 export default router;
