@@ -27,15 +27,43 @@ export const register = asyncHandler(async (req, res, next) => {
 // @desc   Login user
 // @route  POST /api/auth/login
 // @access Public
+// export const login = asyncHandler(async (req, res, next) => {
+//   const { email, password } = req.body;
+//   if (!email || !password) return next(new errorResponse('Please provide email and password', 400));
+
+//   const user = await User.findOne({ email }).select('+password');
+//   if (!user) return next(new errorResponse('Invalid credentials', 401));
+
+//   const isMatch = await user.matchPassword(password);
+//   if (!isMatch) return next(new errorResponse('Invalid credentials', 401));
+  
+  
+
+//   sendTokenResponse(user, 200, res);
+// });
 export const login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
-  if (!email || !password) return next(new errorResponse('Please provide email and password', 400));
+
+  if (!email || !password) {
+    return next(new errorResponse('Please provide email and password', 400));
+  }
 
   const user = await User.findOne({ email }).select('+password');
-  if (!user) return next(new errorResponse('Invalid credentials', 401));
+
+  if (!user) {
+    return next(new errorResponse('Invalid credentials', 401));
+  }
+
+  // ✅ ADD THIS CHECK
+  if (!user.isActive) {
+    return next(new errorResponse('Account is deactivated. Contact admin.', 403));
+  }
 
   const isMatch = await user.matchPassword(password);
-  if (!isMatch) return next(new errorResponse('Invalid credentials', 401));
+
+  if (!isMatch) {
+    return next(new errorResponse('Invalid credentials', 401));
+  }
 
   sendTokenResponse(user, 200, res);
 });
@@ -167,4 +195,33 @@ export const getAllCompanies = asyncHandler(async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
+});
+
+// @desc    Toggle HR Active/Inactive (Admin only)
+// @route   PUT /api/auth/toggle-user/:id
+// @access  Private (Admin only)
+
+export const toggleUserStatus = asyncHandler(async (req, res, next) => {
+  const userId = req.params.id;
+
+  // Find user
+  const user = await User.findById(userId);
+  if (!user) {
+    return next(new errorResponse("User not found", 404));
+  }
+
+  // Only HR can be toggled (optional restriction)
+  if (user.role !== "HR") {
+    return next(new errorResponse("Only HR accounts can be updated", 400));
+  }
+
+  // Toggle status
+  user.isActive = !user.isActive;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: `User is now ${user.isActive ? "Active" : "Inactive"}`,
+    data: user,
+  });
 });
