@@ -35,3 +35,23 @@ export const markAsRead = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Mark all notifications for the logged-in user as read
+export const markAllAsRead = async (req, res) => {
+  try {
+    console.log('markAllAsRead called for user:', req.user._id);
+    const userId = req.user._id;
+    const result = await Notification.updateMany({ recipient: userId, read: false }, { $set: { read: true } });
+    console.log('markAllAsRead result:', result);
+    // Optionally notify other sockets for this user
+    try {
+      const io = req.app.get('io');
+      if (io) io.to(userId.toString()).emit('notificationsMarkedRead');
+    } catch (e) {
+      // ignore socket emit errors
+    }
+    res.json({ modifiedCount: result.modifiedCount || result.nModified || 0 });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

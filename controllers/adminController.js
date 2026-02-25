@@ -23,9 +23,9 @@ export const registerRMG = asyncHandler(async (req, res, next) => {
   const existing = await User.findOne({ email });
   if (existing) return next(new ErrorResponse('Email already registered', 400));
 
-  // ensure only one RMG per company
-  // const existingRMG = await User.findOne({ role: 'RMG', company });
-  // if (existingRMG) return next(new ErrorResponse('An RMG already exists for this company', 400));
+  // ensure only one RMG exists in the system
+  const existingAnyRMG = await User.findOne({ role: 'RMG' });
+  if (existingAnyRMG) return next(new ErrorResponse('An RMG already exists. Only one RMG can be registered.', 400));
 
   // generate secure password
   const password = generatePassword();
